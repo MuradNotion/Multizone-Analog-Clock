@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Multi-Zone Clocks</title>
   <style>
     html, body {
@@ -17,12 +17,12 @@
 
     .clock-container {
       display: flex;
+      flex-wrap: wrap;
+      gap: 40px;
       justify-content: center;
       align-items: center;
-      flex-wrap: wrap;
-      gap: 30px;
+      padding: 20px;
       width: 100%;
-      padding: 40px;
       box-sizing: border-box;
     }
 
@@ -36,10 +36,10 @@
     }
 
     select {
-      margin-top: 12px;
-      padding: 4px 8px;
+      margin-top: 10px;
       font-size: 14px;
-      max-width: 200px;
+      padding: 4px 10px;
+      text-align: center;
     }
   </style>
 </head>
@@ -47,13 +47,21 @@
   <div class="clock-container" id="clockContainer"></div>
 
   <script>
+    const zones = [
+      { label: 'Dhaka', tz: 'Asia/Dhaka' },
+      { label: 'New York', tz: 'America/New_York' },
+      { label: 'London', tz: 'Europe/London' },
+      { label: 'Tokyo', tz: 'Asia/Tokyo' },
+      { label: 'Sydney', tz: 'Australia/Sydney' },
+      { label: 'Dubai', tz: 'Asia/Dubai' },
+      { label: 'Paris', tz: 'Europe/Paris' },
+      { label: 'Moscow', tz: 'Europe/Moscow' },
+      { label: 'Beijing', tz: 'Asia/Shanghai' },
+      { label: 'Toronto', tz: 'America/Toronto' }
+    ];
+
     const numberOfClocks = 5;
     const clocks = [];
-
-    // Get all time zones (modern browsers support this)
-    const timezones = Intl.supportedValuesOf
-      ? Intl.supportedValuesOf('timeZone')
-      : [ 'UTC', 'Asia/Dhaka', 'America/New_York', 'Europe/London', 'Asia/Tokyo' ];
 
     function createClockElement(index) {
       const clockBox = document.createElement('div');
@@ -64,17 +72,18 @@
       canvas.height = 200;
 
       const select = document.createElement('select');
-      timezones.forEach(tz => {
+      zones.forEach(({ label, tz }) => {
         const option = document.createElement('option');
         option.value = tz;
-        option.textContent = tz;
+        option.textContent = label;
         select.appendChild(option);
       });
 
-      select.value = 'UTC';
+      // Default zone (rotating different cities)
+      select.value = zones[index % zones.length].tz;
+
       clockBox.appendChild(canvas);
       clockBox.appendChild(select);
-
       document.getElementById('clockContainer').appendChild(clockBox);
 
       clocks.push({ canvas, ctx: canvas.getContext('2d'), select });
@@ -85,14 +94,12 @@
       const center = { x: 100, y: 100 };
       ctx.clearRect(0, 0, 200, 200);
 
-      // Clock border
       ctx.beginPath();
       ctx.arc(center.x, center.y, radius, 0, 2 * Math.PI);
       ctx.strokeStyle = '#000';
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      // Minute ticks
       for (let i = 0; i < 60; i++) {
         const angle = i * Math.PI / 30;
         const len = i % 5 === 0 ? 10 : 4;
@@ -104,7 +111,6 @@
         ctx.beginPath();
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
-        ctx.strokeStyle = '#000';
         ctx.lineWidth = i % 5 === 0 ? 2 : 1;
         ctx.stroke();
       }
@@ -113,7 +119,6 @@
       const minute = time.getMinutes();
       const second = time.getSeconds();
 
-      // Hour hand
       const hourAngle = ((hour + minute / 60) * Math.PI / 6);
       ctx.beginPath();
       ctx.moveTo(center.x, center.y);
@@ -123,7 +128,6 @@
       ctx.lineWidth = 4;
       ctx.stroke();
 
-      // Minute hand
       const minuteAngle = ((minute + second / 60) * Math.PI / 30);
       ctx.beginPath();
       ctx.moveTo(center.x, center.y);
@@ -137,26 +141,22 @@
     function updateClocks() {
       clocks.forEach(({ ctx, select }) => {
         const now = new Date();
-        try {
-          const time = new Intl.DateTimeFormat('en-US', {
-            timeZone: select.value,
-            hour: 'numeric',
-            minute: 'numeric',
-            second: 'numeric',
-            hour12: false
-          }).formatToParts(now);
+        const parts = new Intl.DateTimeFormat('en-US', {
+          timeZone: select.value,
+          hour: 'numeric',
+          minute: 'numeric',
+          second: 'numeric',
+          hour12: false
+        }).formatToParts(now);
 
-          const h = +time.find(t => t.type === 'hour').value;
-          const m = +time.find(t => t.type === 'minute').value;
-          const s = +time.find(t => t.type === 'second').value;
-          const timeObj = new Date();
-          timeObj.setHours(h, m, s);
+        const h = +parts.find(p => p.type === 'hour').value;
+        const m = +parts.find(p => p.type === 'minute').value;
+        const s = +parts.find(p => p.type === 'second').value;
 
-          drawClock(ctx, timeObj);
-        } catch (e) {
-          // Fallback if timezone isn't valid
-          drawClock(ctx, now);
-        }
+        const timeObj = new Date();
+        timeObj.setHours(h, m, s);
+
+        drawClock(ctx, timeObj);
       });
     }
 
@@ -169,4 +169,3 @@
   </script>
 </body>
 </html>
-
