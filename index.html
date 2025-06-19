@@ -2,10 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Minimal City Clocks</title>
+  <title>City Clock Board</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.min.css" rel="stylesheet" />
-
   <style>
     html, body {
       margin: 0;
@@ -24,8 +23,8 @@
 
     .clock-container {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 32px;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 24px;
       padding: 20px;
       box-sizing: border-box;
       width: 100%;
@@ -39,7 +38,15 @@
       align-items: center;
       cursor: pointer;
       width: 100%;
-      max-width: 220px;
+      max-width: 240px;
+      padding: 16px;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      transition: background-color 0.3s ease;
+    }
+
+    body.dark .clock-box {
+      background-color: rgba(255, 255, 255, 0.05);
     }
 
     .clock-canvas {
@@ -48,7 +55,7 @@
     }
 
     select {
-      margin-top: 12px;
+      margin-top: 10px;
       font-size: 14px;
       background: transparent;
       border: none !important;
@@ -85,46 +92,26 @@
     }
   </style>
 </head>
-<body class="light">
+<body>
   <div class="clock-container" id="clockContainer"></div>
 
-  <!-- Tom Select JS -->
   <script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
   <script>
-    // City time zones with IANA identifiers
-    const zones = [
-      'Asia/Dhaka',
-      'Asia/Tokyo',
-      'Asia/Kolkata',
-      'Asia/Shanghai',
-      'Asia/Dubai',
-      'Asia/Singapore',
-      'Europe/London',
-      'Europe/Paris',
-      'Europe/Berlin',
-      'Europe/Moscow',
-      'Europe/Amsterdam',
-      'Europe/Rome',
-      'Europe/Madrid',
-      'America/New_York',
-      'America/Chicago',
-      'America/Denver',
-      'America/Los_Angeles',
-      'America/Toronto',
-      'America/Vancouver',
-      'Australia/Sydney',
-      'Australia/Melbourne',
-      'Africa/Cairo',
-      'Africa/Johannesburg',
-      'America/Mexico_City',
-      'Pacific/Auckland'
-    ].map(tz => ({
-      label: tz.split('/').pop().replace(/_/g, ' '),
-      tz
-    }));
-
     const numberOfClocks = 5;
     const clocks = [];
+
+    // Get all IANA time zones via Intl (browser-supported list)
+    const allTimeZones = Intl.supportedValuesOf('timeZone');
+    const allZones = allTimeZones.map(tz => {
+      const city = tz.split('/').pop().replace(/_/g, ' ');
+      return { tz, label: city };
+    }).sort((a, b) => a.label.localeCompare(b.label));
+
+    const storedTheme = localStorage.getItem('theme') || 'light';
+    document.body.className = storedTheme;
+
+    const storedZones = JSON.parse(localStorage.getItem('zones') || '[]');
+    const fallbackZones = ['Asia/Dhaka', 'Europe/London', 'America/New_York', 'Asia/Tokyo', 'Australia/Sydney'];
 
     function createClockElement(index) {
       const clockBox = document.createElement('div');
@@ -136,27 +123,29 @@
       canvas.className = 'clock-canvas';
 
       const select = document.createElement('select');
-      zones.forEach(({ label, tz }) => {
+      allZones.forEach(({ label, tz }) => {
         const option = document.createElement('option');
         option.value = tz;
         option.textContent = label;
         select.appendChild(option);
       });
 
-      select.value = zones[index % zones.length].tz;
+      const zone = storedZones[index] || fallbackZones[index % fallbackZones.length];
+      select.value = zone;
       select.className = 'timezone-select';
 
       clockBox.appendChild(canvas);
       clockBox.appendChild(select);
       document.getElementById('clockContainer').appendChild(clockBox);
 
-      new TomSelect(select, {
+      const tom = new TomSelect(select, {
         create: false,
         maxOptions: 1000,
         placeholder: "Select City",
         highlight: true
       });
 
+      select.addEventListener('change', saveZones);
       clockBox.addEventListener('click', toggleTheme);
 
       clocks.push({ canvas, ctx: canvas.getContext('2d'), select });
@@ -172,7 +161,7 @@
 
       for (let i = 0; i < 60; i++) {
         const angle = i * Math.PI / 30;
-        const len = i % 5 === 0 ? 10 : 3;
+        const len = i % 5 === 0 ? 14 : 7;
         const x1 = center.x + Math.cos(angle) * (radius - len);
         const y1 = center.y + Math.sin(angle) * (radius - len);
         const x2 = center.x + Math.cos(angle) * radius;
@@ -181,7 +170,7 @@
         ctx.beginPath();
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
-        ctx.lineWidth = i % 5 === 0 ? 1.5 : 0.8;
+        ctx.lineWidth = i % 5 === 0 ? 2 : 1;
         ctx.stroke();
       }
 
@@ -234,9 +223,16 @@
     }
 
     function toggleTheme() {
-      document.body.classList.toggle('dark');
-      document.body.classList.toggle('light');
+      const body = document.body;
+      body.classList.toggle('dark');
+      body.classList.toggle('light');
+      localStorage.setItem('theme', body.classList.contains('dark') ? 'dark' : 'light');
       updateClocks();
+    }
+
+    function saveZones() {
+      const zones = clocks.map(({ select }) => select.tomselect.getValue());
+      localStorage.setItem('zones', JSON.stringify(zones));
     }
 
     for (let i = 0; i < numberOfClocks; i++) {
