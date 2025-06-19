@@ -23,7 +23,7 @@
 
     .clock-container {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 24px;
       padding: 20px;
       box-sizing: border-box;
@@ -38,24 +38,37 @@
       align-items: center;
       cursor: pointer;
       width: 100%;
-      max-width: 240px;
-      padding: 16px;
+      max-width: 180px;
+      padding: 12px;
       border-radius: 16px;
-      transition: background-color 0.4s ease;
-      background-color: #f5f5f5; /* Light mode default */
+      background-color: transparent; /* no bg behind dropdown */
     }
 
-    body.dark .clock-box {
+    /* Circular background only behind clock dial */
+    .clock-dial {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      background-color: #f5f5f5; /* Light mode */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 8px;
+      transition: background-color 0.4s ease;
+    }
+    body.dark .clock-dial {
       background-color: #1e1e1e; /* Dark mode */
     }
 
     .clock-canvas {
-      width: 100%;
-      aspect-ratio: 1 / 1;
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      display: block;
     }
 
     select {
-      margin-top: 10px;
+      margin-top: 4px;
       font-size: 14px;
       background: transparent;
       border: none !important;
@@ -117,10 +130,17 @@
       const clockBox = document.createElement('div');
       clockBox.className = 'clock-box';
 
+      // Wrapper for circular background behind canvas
+      const dialWrapper = document.createElement('div');
+      dialWrapper.className = 'clock-dial';
+
       const canvas = document.createElement('canvas');
-      canvas.width = 400;
-      canvas.height = 400;
+      canvas.width = 140;
+      canvas.height = 140;
       canvas.className = 'clock-canvas';
+
+      dialWrapper.appendChild(canvas);
+      clockBox.appendChild(dialWrapper);
 
       const select = document.createElement('select');
       allZones.forEach(({ label, tz }) => {
@@ -134,7 +154,6 @@
       select.value = zone;
       select.className = 'timezone-select';
 
-      clockBox.appendChild(canvas);
       clockBox.appendChild(select);
       document.getElementById('clockContainer').appendChild(clockBox);
 
@@ -152,16 +171,17 @@
     }
 
     function drawClock(ctx, time, isDark) {
-      const center = { x: 200, y: 200 };
-      const radius = 180;
-      ctx.clearRect(0, 0, 400, 400);
+      const center = { x: 70, y: 70 };
+      const radius = 65;
+
+      ctx.clearRect(0, 0, 140, 140);
       const color = isDark ? '#fff' : '#111';
 
       ctx.strokeStyle = color;
 
       for (let i = 0; i < 60; i++) {
         const angle = i * Math.PI / 30;
-        const len = i % 5 === 0 ? 14 : 7;
+        const len = i % 5 === 0 ? 7 : 3;
         const x1 = center.x + Math.cos(angle) * (radius - len);
         const y1 = center.y + Math.sin(angle) * (radius - len);
         const x2 = center.x + Math.cos(angle) * radius;
@@ -170,7 +190,7 @@
         ctx.beginPath();
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
-        ctx.lineWidth = i % 5 === 0 ? 2 : 1;
+        ctx.lineWidth = i % 5 === 0 ? 1.5 : 0.7;
         ctx.stroke();
       }
 
@@ -184,17 +204,17 @@
       // Hour hand
       ctx.beginPath();
       ctx.moveTo(center.x, center.y);
-      ctx.lineTo(center.x + Math.cos(hourAngle - Math.PI / 2) * 80,
-                 center.y + Math.sin(hourAngle - Math.PI / 2) * 80);
-      ctx.lineWidth = 4;
+      ctx.lineTo(center.x + Math.cos(hourAngle - Math.PI / 2) * 30,
+                 center.y + Math.sin(hourAngle - Math.PI / 2) * 30);
+      ctx.lineWidth = 2.5;
       ctx.stroke();
 
       // Minute hand
       ctx.beginPath();
       ctx.moveTo(center.x, center.y);
-      ctx.lineTo(center.x + Math.cos(minuteAngle - Math.PI / 2) * 120,
-                 center.y + Math.sin(minuteAngle - Math.PI / 2) * 120);
-      ctx.lineWidth = 2;
+      ctx.lineTo(center.x + Math.cos(minuteAngle - Math.PI / 2) * 50,
+                 center.y + Math.sin(minuteAngle - Math.PI / 2) * 50);
+      ctx.lineWidth = 1.5;
       ctx.stroke();
     }
 
