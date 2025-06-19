@@ -39,6 +39,7 @@
       margin-top: 12px;
       padding: 4px 8px;
       font-size: 14px;
+      max-width: 200px;
     }
   </style>
 </head>
@@ -46,17 +47,13 @@
   <div class="clock-container" id="clockContainer"></div>
 
   <script>
-    const timezones = [
-      'UTC',
-      'Asia/Dhaka',
-      'America/New_York',
-      'Europe/London',
-      'Asia/Tokyo',
-      'Australia/Sydney'
-    ];
-
     const numberOfClocks = 5;
     const clocks = [];
+
+    // Get all time zones (modern browsers support this)
+    const timezones = Intl.supportedValuesOf
+      ? Intl.supportedValuesOf('timeZone')
+      : [ 'UTC', 'Asia/Dhaka', 'America/New_York', 'Europe/London', 'Asia/Tokyo' ];
 
     function createClockElement(index) {
       const clockBox = document.createElement('div');
@@ -70,7 +67,7 @@
       timezones.forEach(tz => {
         const option = document.createElement('option');
         option.value = tz;
-        option.textContent = tz.replace('Asia/', '').replace('America/', '').replace('Europe/', '');
+        option.textContent = tz;
         select.appendChild(option);
       });
 
@@ -140,21 +137,26 @@
     function updateClocks() {
       clocks.forEach(({ ctx, select }) => {
         const now = new Date();
-        const time = new Intl.DateTimeFormat('en-US', {
-          timeZone: select.value,
-          hour: 'numeric',
-          minute: 'numeric',
-          second: 'numeric',
-          hour12: false
-        }).formatToParts(now);
+        try {
+          const time = new Intl.DateTimeFormat('en-US', {
+            timeZone: select.value,
+            hour: 'numeric',
+            minute: 'numeric',
+            second: 'numeric',
+            hour12: false
+          }).formatToParts(now);
 
-        const h = +time.find(t => t.type === 'hour').value;
-        const m = +time.find(t => t.type === 'minute').value;
-        const s = +time.find(t => t.type === 'second').value;
-        const timeObj = new Date();
-        timeObj.setHours(h, m, s);
+          const h = +time.find(t => t.type === 'hour').value;
+          const m = +time.find(t => t.type === 'minute').value;
+          const s = +time.find(t => t.type === 'second').value;
+          const timeObj = new Date();
+          timeObj.setHours(h, m, s);
 
-        drawClock(ctx, timeObj);
+          drawClock(ctx, timeObj);
+        } catch (e) {
+          // Fallback if timezone isn't valid
+          drawClock(ctx, now);
+        }
       });
     }
 
@@ -167,3 +169,4 @@
   </script>
 </body>
 </html>
+
