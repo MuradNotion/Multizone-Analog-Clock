@@ -2,117 +2,168 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Multi-Zone Analog Clocks</title>
+  <title>Multi-Zone Clocks</title>
   <style>
-    body {
+    html, body {
       margin: 0;
-      font-family: Arial, sans-serif;
+      padding: 0;
+      background: transparent;
+      font-family: sans-serif;
+      height: 100%;
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
-      background: #fff;
     }
 
     .clock-container {
       display: flex;
-      gap: 40px;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 30px;
+      width: 100%;
+      padding: 40px;
+      box-sizing: border-box;
     }
 
-    .clock {
+    .clock-box {
       text-align: center;
     }
 
     canvas {
-      display: block;
-      margin: 0 auto;
+      width: 180px;
+      height: 180px;
     }
 
-    .label {
-      margin-top: 10px;
+    select {
+      margin-top: 12px;
+      padding: 4px 8px;
       font-size: 14px;
-      color: #000;
     }
   </style>
 </head>
 <body>
-  <div class="clock-container">
-    <div class="clock"><canvas width="120" height="120"></canvas><div class="label">SELECT ZONE</div></div>
-    <div class="clock"><canvas width="120" height="120"></canvas><div class="label">SELECT ZONE</div></div>
-    <div class="clock"><canvas width="120" height="120"></canvas><div class="label">SELECT ZONE</div></div>
-    <div class="clock"><canvas width="120" height="120"></canvas><div class="label">SELECT ZONE</div></div>
-    <div class="clock"><canvas width="120" height="120"></canvas><div class="label">SELECT ZONE</div></div>
-  </div>
+  <div class="clock-container" id="clockContainer"></div>
 
   <script>
-    function drawClock(ctx, offset = 0) {
-      const now = new Date(new Date().getTime() + offset * 3600000);
-      const radius = 50;
-      const centerX = 60;
-      const centerY = 60;
+    const timezones = [
+      'UTC',
+      'Asia/Dhaka',
+      'America/New_York',
+      'Europe/London',
+      'Asia/Tokyo',
+      'Australia/Sydney'
+    ];
 
-      ctx.clearRect(0, 0, 120, 120);
+    const numberOfClocks = 5;
+    const clocks = [];
 
-      // Clock face
+    function createClockElement(index) {
+      const clockBox = document.createElement('div');
+      clockBox.className = 'clock-box';
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 200;
+      canvas.height = 200;
+
+      const select = document.createElement('select');
+      timezones.forEach(tz => {
+        const option = document.createElement('option');
+        option.value = tz;
+        option.textContent = tz.replace('Asia/', '').replace('America/', '').replace('Europe/', '');
+        select.appendChild(option);
+      });
+
+      select.value = 'UTC';
+      clockBox.appendChild(canvas);
+      clockBox.appendChild(select);
+
+      document.getElementById('clockContainer').appendChild(clockBox);
+
+      clocks.push({ canvas, ctx: canvas.getContext('2d'), select });
+    }
+
+    function drawClock(ctx, time) {
+      const radius = 90;
+      const center = { x: 100, y: 100 };
+      ctx.clearRect(0, 0, 200, 200);
+
+      // Clock border
       ctx.beginPath();
-      ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-      ctx.strokeStyle = "#000";
+      ctx.arc(center.x, center.y, radius, 0, 2 * Math.PI);
+      ctx.strokeStyle = '#000';
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      // Ticks
+      // Minute ticks
       for (let i = 0; i < 60; i++) {
-        const angle = (i * 6) * Math.PI / 180;
-        const length = i % 5 === 0 ? 10 : 5;
-        const x1 = centerX + Math.cos(angle) * (radius - length);
-        const y1 = centerY + Math.sin(angle) * (radius - length);
-        const x2 = centerX + Math.cos(angle) * radius;
-        const y2 = centerY + Math.sin(angle) * radius;
+        const angle = i * Math.PI / 30;
+        const len = i % 5 === 0 ? 10 : 4;
+        const x1 = center.x + Math.cos(angle) * (radius - len);
+        const y1 = center.y + Math.sin(angle) * (radius - len);
+        const x2 = center.x + Math.cos(angle) * radius;
+        const y2 = center.y + Math.sin(angle) * radius;
 
         ctx.beginPath();
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = i % 5 === 0 ? 2 : 1;
         ctx.stroke();
       }
 
-      // Get time
-      let hour = now.getHours() % 12;
-      let minute = now.getMinutes();
-      let second = now.getSeconds();
-
-      const hourAngle = (hour + minute / 60) * 30 * Math.PI / 180;
-      const minuteAngle = (minute + second / 60) * 6 * Math.PI / 180;
+      const hour = time.getHours() % 12;
+      const minute = time.getMinutes();
+      const second = time.getSeconds();
 
       // Hour hand
+      const hourAngle = ((hour + minute / 60) * Math.PI / 6);
       ctx.beginPath();
-      ctx.moveTo(centerX, centerY);
-      ctx.lineTo(centerX + Math.cos(hourAngle - Math.PI / 2) * 25,
-                 centerY + Math.sin(hourAngle - Math.PI / 2) * 25);
-      ctx.strokeStyle = "#000";
-      ctx.lineWidth = 3;
+      ctx.moveTo(center.x, center.y);
+      ctx.lineTo(center.x + Math.cos(hourAngle - Math.PI / 2) * 40,
+                 center.y + Math.sin(hourAngle - Math.PI / 2) * 40);
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 4;
       ctx.stroke();
 
       // Minute hand
+      const minuteAngle = ((minute + second / 60) * Math.PI / 30);
       ctx.beginPath();
-      ctx.moveTo(centerX, centerY);
-      ctx.lineTo(centerX + Math.cos(minuteAngle - Math.PI / 2) * 35,
-                 centerY + Math.sin(minuteAngle - Math.PI / 2) * 35);
+      ctx.moveTo(center.x, center.y);
+      ctx.lineTo(center.x + Math.cos(minuteAngle - Math.PI / 2) * 60,
+                 center.y + Math.sin(minuteAngle - Math.PI / 2) * 60);
+      ctx.strokeStyle = '#000';
       ctx.lineWidth = 2;
       ctx.stroke();
     }
 
-    const offsets = [0, 1, 2, 3, 4]; // Replace with real timezone offsets if needed
-    const canvases = document.querySelectorAll("canvas");
+    function updateClocks() {
+      clocks.forEach(({ ctx, select }) => {
+        const now = new Date();
+        const time = new Intl.DateTimeFormat('en-US', {
+          timeZone: select.value,
+          hour: 'numeric',
+          minute: 'numeric',
+          second: 'numeric',
+          hour12: false
+        }).formatToParts(now);
 
-    function updateAllClocks() {
-      canvases.forEach((canvas, i) => {
-        const ctx = canvas.getContext("2d");
-        drawClock(ctx, offsets[i]);
+        const h = +time.find(t => t.type === 'hour').value;
+        const m = +time.find(t => t.type === 'minute').value;
+        const s = +time.find(t => t.type === 'second').value;
+        const timeObj = new Date();
+        timeObj.setHours(h, m, s);
+
+        drawClock(ctx, timeObj);
       });
     }
 
-    setInterval(updateAllClocks, 1000);
-    updateAllClocks();
+    for (let i = 0; i < numberOfClocks; i++) {
+      createClockElement(i);
+    }
+
+    setInterval(updateClocks, 1000);
+    updateClocks();
   </script>
 </body>
 </html>
