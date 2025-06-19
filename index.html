@@ -2,20 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Multi-Zone Clocks</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Tom Select CSS -->
+  <title>Minimal City Clocks</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.min.css" rel="stylesheet" />
 
   <style>
     html, body {
       margin: 0;
       padding: 0;
-      background-color: transparent !important;
-      font-family: sans-serif;
+      background: transparent !important;
+      font-family: 'Helvetica Neue', sans-serif;
       height: 100%;
       width: 100%;
-      color: #000;
+      color: #111;
       transition: color 0.3s ease;
     }
 
@@ -26,7 +25,7 @@
     .clock-container {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 30px;
+      gap: 32px;
       padding: 20px;
       box-sizing: border-box;
       width: 100%;
@@ -49,33 +48,40 @@
     }
 
     select {
-      margin-top: 10px;
+      margin-top: 12px;
       font-size: 14px;
       background: transparent;
-      border: none;
+      border: none !important;
       outline: none;
       color: inherit;
       text-align: center;
       width: 100%;
+      appearance: none;
     }
 
-    /* Tom Select styling */
     .ts-wrapper.single .ts-control {
       background: transparent;
-      border: none;
+      border: none !important;
       color: inherit;
-      border-bottom: 1px solid currentColor;
-      padding: 2px;
+      font-size: 14px;
+      padding: 4px;
+      box-shadow: none;
+    }
+
+    .ts-wrapper.single .ts-control::after {
+      border-color: currentColor transparent transparent transparent;
     }
 
     .ts-dropdown {
       background: rgba(255, 255, 255, 0.95);
       color: #000;
+      border: 1px solid #ccc;
     }
 
     body.dark .ts-dropdown {
-      background: rgba(0, 0, 0, 0.95);
+      background: rgba(0, 0, 0, 0.9);
       color: #fff;
+      border-color: #444;
     }
   </style>
 </head>
@@ -85,18 +91,37 @@
   <!-- Tom Select JS -->
   <script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
   <script>
+    // City time zones with IANA identifiers
     const zones = [
-      { label: 'Dhaka (GMT+6)', tz: 'Asia/Dhaka' },
-      { label: 'New York (GMT-4)', tz: 'America/New_York' },
-      { label: 'London (GMT+1)', tz: 'Europe/London' },
-      { label: 'Tokyo (GMT+9)', tz: 'Asia/Tokyo' },
-      { label: 'Sydney (GMT+10)', tz: 'Australia/Sydney' },
-      { label: 'Dubai (GMT+4)', tz: 'Asia/Dubai' },
-      { label: 'Paris (GMT+2)', tz: 'Europe/Paris' },
-      { label: 'Moscow (GMT+3)', tz: 'Europe/Moscow' },
-      { label: 'Beijing (GMT+8)', tz: 'Asia/Shanghai' },
-      { label: 'Toronto (GMT-4)', tz: 'America/Toronto' }
-    ];
+      'Asia/Dhaka',
+      'Asia/Tokyo',
+      'Asia/Kolkata',
+      'Asia/Shanghai',
+      'Asia/Dubai',
+      'Asia/Singapore',
+      'Europe/London',
+      'Europe/Paris',
+      'Europe/Berlin',
+      'Europe/Moscow',
+      'Europe/Amsterdam',
+      'Europe/Rome',
+      'Europe/Madrid',
+      'America/New_York',
+      'America/Chicago',
+      'America/Denver',
+      'America/Los_Angeles',
+      'America/Toronto',
+      'America/Vancouver',
+      'Australia/Sydney',
+      'Australia/Melbourne',
+      'Africa/Cairo',
+      'Africa/Johannesburg',
+      'America/Mexico_City',
+      'Pacific/Auckland'
+    ].map(tz => ({
+      label: tz.split('/').pop().replace(/_/g, ' '),
+      tz
+    }));
 
     const numberOfClocks = 5;
     const clocks = [];
@@ -128,7 +153,7 @@
       new TomSelect(select, {
         create: false,
         maxOptions: 1000,
-        placeholder: "Select Time Zone",
+        placeholder: "Select City",
         highlight: true
       });
 
@@ -141,11 +166,13 @@
       const center = { x: 200, y: 200 };
       const radius = 180;
       ctx.clearRect(0, 0, 400, 400);
-      const color = isDark ? '#fff' : '#000';
+      const color = isDark ? '#fff' : '#111';
+
+      ctx.strokeStyle = color;
 
       for (let i = 0; i < 60; i++) {
         const angle = i * Math.PI / 30;
-        const len = i % 5 === 0 ? 14 : 5;
+        const len = i % 5 === 0 ? 10 : 3;
         const x1 = center.x + Math.cos(angle) * (radius - len);
         const y1 = center.y + Math.sin(angle) * (radius - len);
         const x2 = center.x + Math.cos(angle) * radius;
@@ -154,8 +181,7 @@
         ctx.beginPath();
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
-        ctx.lineWidth = i % 5 === 0 ? 2 : 1;
-        ctx.strokeStyle = color;
+        ctx.lineWidth = i % 5 === 0 ? 1.5 : 0.8;
         ctx.stroke();
       }
 
@@ -166,20 +192,20 @@
       const hourAngle = ((hour + minute / 60) * Math.PI / 6);
       const minuteAngle = ((minute + second / 60) * Math.PI / 30);
 
-      ctx.strokeStyle = color;
-
+      // Hour hand
       ctx.beginPath();
       ctx.moveTo(center.x, center.y);
-      ctx.lineTo(center.x + Math.cos(hourAngle - Math.PI / 2) * 90,
-                 center.y + Math.sin(hourAngle - Math.PI / 2) * 90);
-      ctx.lineWidth = 5;
+      ctx.lineTo(center.x + Math.cos(hourAngle - Math.PI / 2) * 80,
+                 center.y + Math.sin(hourAngle - Math.PI / 2) * 80);
+      ctx.lineWidth = 4;
       ctx.stroke();
 
+      // Minute hand
       ctx.beginPath();
       ctx.moveTo(center.x, center.y);
-      ctx.lineTo(center.x + Math.cos(minuteAngle - Math.PI / 2) * 140,
-                 center.y + Math.sin(minuteAngle - Math.PI / 2) * 140);
-      ctx.lineWidth = 3;
+      ctx.lineTo(center.x + Math.cos(minuteAngle - Math.PI / 2) * 120,
+                 center.y + Math.sin(minuteAngle - Math.PI / 2) * 120);
+      ctx.lineWidth = 2;
       ctx.stroke();
     }
 
