@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Multi-Zone Analog Clocks</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: #fff;
+    }
+
+    .clock-container {
+      display: flex;
+      gap: 40px;
+    }
+
+    .clock {
+      text-align: center;
+    }
+
+    canvas {
+      display: block;
+      margin: 0 auto;
+    }
+
+    .label {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #000;
+    }
+  </style>
+</head>
+<body>
+  <div class="clock-container">
+    <div class="clock"><canvas width="120" height="120"></canvas><div class="label">SELECT ZONE</div></div>
+    <div class="clock"><canvas width="120" height="120"></canvas><div class="label">SELECT ZONE</div></div>
+    <div class="clock"><canvas width="120" height="120"></canvas><div class="label">SELECT ZONE</div></div>
+    <div class="clock"><canvas width="120" height="120"></canvas><div class="label">SELECT ZONE</div></div>
+    <div class="clock"><canvas width="120" height="120"></canvas><div class="label">SELECT ZONE</div></div>
+  </div>
+
+  <script>
+    function drawClock(ctx, offset = 0) {
+      const now = new Date(new Date().getTime() + offset * 3600000);
+      const radius = 50;
+      const centerX = 60;
+      const centerY = 60;
+
+      ctx.clearRect(0, 0, 120, 120);
+
+      // Clock face
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+      ctx.strokeStyle = "#000";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Ticks
+      for (let i = 0; i < 60; i++) {
+        const angle = (i * 6) * Math.PI / 180;
+        const length = i % 5 === 0 ? 10 : 5;
+        const x1 = centerX + Math.cos(angle) * (radius - length);
+        const y1 = centerY + Math.sin(angle) * (radius - length);
+        const x2 = centerX + Math.cos(angle) * radius;
+        const y2 = centerY + Math.sin(angle) * radius;
+
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+      }
+
+      // Get time
+      let hour = now.getHours() % 12;
+      let minute = now.getMinutes();
+      let second = now.getSeconds();
+
+      const hourAngle = (hour + minute / 60) * 30 * Math.PI / 180;
+      const minuteAngle = (minute + second / 60) * 6 * Math.PI / 180;
+
+      // Hour hand
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      ctx.lineTo(centerX + Math.cos(hourAngle - Math.PI / 2) * 25,
+                 centerY + Math.sin(hourAngle - Math.PI / 2) * 25);
+      ctx.strokeStyle = "#000";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Minute hand
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      ctx.lineTo(centerX + Math.cos(minuteAngle - Math.PI / 2) * 35,
+                 centerY + Math.sin(minuteAngle - Math.PI / 2) * 35);
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    const offsets = [0, 1, 2, 3, 4]; // Replace with real timezone offsets if needed
+    const canvases = document.querySelectorAll("canvas");
+
+    function updateAllClocks() {
+      canvases.forEach((canvas, i) => {
+        const ctx = canvas.getContext("2d");
+        drawClock(ctx, offsets[i]);
+      });
+    }
+
+    setInterval(updateAllClocks, 1000);
+    updateAllClocks();
+  </script>
+</body>
+</html>
