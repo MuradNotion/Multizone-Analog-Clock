@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>City Clock Board</title>
+  <title>Color Clock Board</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.min.css" rel="stylesheet" />
   <style>
@@ -40,13 +40,13 @@
       width: 100%;
       max-width: 240px;
       padding: 16px;
-      background-color: rgba(255, 255, 255, 0.1);
       border-radius: 16px;
-      transition: background-color 0.3s ease;
+      transition: background-color 0.4s ease;
+      background-color: #f5f5f5; /* Light mode default */
     }
 
     body.dark .clock-box {
-      background-color: rgba(255, 255, 255, 0.05);
+      background-color: #1e1e1e; /* Dark mode */
     }
 
     .clock-canvas {
@@ -100,7 +100,7 @@
     const numberOfClocks = 5;
     const clocks = [];
 
-    // Get all IANA time zones via Intl (browser-supported list)
+    // All browser-supported time zones
     const allTimeZones = Intl.supportedValuesOf('timeZone');
     const allZones = allTimeZones.map(tz => {
       const city = tz.split('/').pop().replace(/_/g, ' ');
@@ -138,7 +138,7 @@
       clockBox.appendChild(select);
       document.getElementById('clockContainer').appendChild(clockBox);
 
-      const tom = new TomSelect(select, {
+      new TomSelect(select, {
         create: false,
         maxOptions: 1000,
         placeholder: "Select City",
