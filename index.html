@@ -3,31 +3,35 @@
 <head>
   <meta charset="UTF-8" />
   <title>Multi-Zone Clocks</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Tom Select CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.min.css" rel="stylesheet" />
 
   <style>
     html, body {
       margin: 0;
       padding: 0;
-      background: transparent;
+      background-color: transparent !important;
       font-family: sans-serif;
       height: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      transition: background 0.3s ease;
+      width: 100%;
+      color: #000;
+      transition: color 0.3s ease;
+    }
+
+    body.dark {
+      color: #fff;
     }
 
     .clock-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 40px;
-      justify-content: center;
-      align-items: center;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 30px;
       padding: 20px;
-      width: 100%;
       box-sizing: border-box;
+      width: 100%;
+      height: 100%;
+      place-items: center;
     }
 
     .clock-box {
@@ -35,49 +39,42 @@
       flex-direction: column;
       align-items: center;
       cursor: pointer;
+      width: 100%;
+      max-width: 220px;
     }
 
-    canvas {
-      width: 180px;
-      height: 180px;
+    .clock-canvas {
+      width: 100%;
+      aspect-ratio: 1 / 1;
     }
 
     select {
       margin-top: 10px;
       font-size: 14px;
-      padding: 4px 10px;
       background: transparent;
       border: none;
       outline: none;
       color: inherit;
       text-align: center;
-      max-width: 200px;
+      width: 100%;
     }
 
-    body.light {
-      background: transparent;
-      color: #000;
-    }
-
-    body.dark {
-      background: #111;
-      color: #fff;
-    }
-
+    /* Tom Select styling */
     .ts-wrapper.single .ts-control {
       background: transparent;
       border: none;
       color: inherit;
-      border-radius: 0;
-      border-bottom: 1px solid #aaa;
+      border-bottom: 1px solid currentColor;
+      padding: 2px;
     }
 
     .ts-dropdown {
+      background: rgba(255, 255, 255, 0.95);
       color: #000;
     }
 
     body.dark .ts-dropdown {
-      background: #222;
+      background: rgba(0, 0, 0, 0.95);
       color: #fff;
     }
   </style>
@@ -109,8 +106,9 @@
       clockBox.className = 'clock-box';
 
       const canvas = document.createElement('canvas');
-      canvas.width = 200;
-      canvas.height = 200;
+      canvas.width = 400;
+      canvas.height = 400;
+      canvas.className = 'clock-canvas';
 
       const select = document.createElement('select');
       zones.forEach(({ label, tz }) => {
@@ -140,15 +138,14 @@
     }
 
     function drawClock(ctx, time, isDark) {
-      const radius = 90;
-      const center = { x: 100, y: 100 };
-      ctx.clearRect(0, 0, 200, 200);
-
-      const strokeColor = isDark ? '#fff' : '#000';
+      const center = { x: 200, y: 200 };
+      const radius = 180;
+      ctx.clearRect(0, 0, 400, 400);
+      const color = isDark ? '#fff' : '#000';
 
       for (let i = 0; i < 60; i++) {
         const angle = i * Math.PI / 30;
-        const len = i % 5 === 0 ? 10 : 4;
+        const len = i % 5 === 0 ? 14 : 5;
         const x1 = center.x + Math.cos(angle) * (radius - len);
         const y1 = center.y + Math.sin(angle) * (radius - len);
         const x2 = center.x + Math.cos(angle) * radius;
@@ -158,7 +155,7 @@
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
         ctx.lineWidth = i % 5 === 0 ? 2 : 1;
-        ctx.strokeStyle = strokeColor;
+        ctx.strokeStyle = color;
         ctx.stroke();
       }
 
@@ -167,21 +164,22 @@
       const second = time.getSeconds();
 
       const hourAngle = ((hour + minute / 60) * Math.PI / 6);
+      const minuteAngle = ((minute + second / 60) * Math.PI / 30);
+
+      ctx.strokeStyle = color;
+
       ctx.beginPath();
       ctx.moveTo(center.x, center.y);
-      ctx.lineTo(center.x + Math.cos(hourAngle - Math.PI / 2) * 40,
-                 center.y + Math.sin(hourAngle - Math.PI / 2) * 40);
-      ctx.strokeStyle = strokeColor;
-      ctx.lineWidth = 4;
+      ctx.lineTo(center.x + Math.cos(hourAngle - Math.PI / 2) * 90,
+                 center.y + Math.sin(hourAngle - Math.PI / 2) * 90);
+      ctx.lineWidth = 5;
       ctx.stroke();
 
-      const minuteAngle = ((minute + second / 60) * Math.PI / 30);
       ctx.beginPath();
       ctx.moveTo(center.x, center.y);
-      ctx.lineTo(center.x + Math.cos(minuteAngle - Math.PI / 2) * 60,
-                 center.y + Math.sin(minuteAngle - Math.PI / 2) * 60);
-      ctx.strokeStyle = strokeColor;
-      ctx.lineWidth = 2;
+      ctx.lineTo(center.x + Math.cos(minuteAngle - Math.PI / 2) * 140,
+                 center.y + Math.sin(minuteAngle - Math.PI / 2) * 140);
+      ctx.lineWidth = 3;
       ctx.stroke();
     }
 
