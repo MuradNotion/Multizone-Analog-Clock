@@ -25,9 +25,10 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 24px;
-      padding: 20px;
+      margin: 0;
+      padding: 0;
       box-sizing: border-box;
-      width: 100%;
+      width: 100vw;
       height: 100%;
       place-items: center;
     }
@@ -41,23 +42,23 @@
       max-width: 180px;
       padding: 12px;
       border-radius: 16px;
-      background-color: transparent; /* no bg behind dropdown */
+      background-color: transparent;
     }
 
-    /* Circular background only behind clock dial */
     .clock-dial {
       width: 160px;
       height: 160px;
       border-radius: 50%;
-      background-color: #f5f5f5; /* Light mode */
+      background-color: #f5f5f5;
       display: flex;
       justify-content: center;
       align-items: center;
       margin-bottom: 8px;
       transition: background-color 0.4s ease;
     }
+
     body.dark .clock-dial {
-      background-color: #1e1e1e; /* Dark mode */
+      background-color: #1e1e1e;
     }
 
     .clock-canvas {
@@ -113,7 +114,6 @@
     const numberOfClocks = 5;
     const clocks = [];
 
-    // All browser-supported time zones
     const allTimeZones = Intl.supportedValuesOf('timeZone');
     const allZones = allTimeZones.map(tz => {
       const city = tz.split('/').pop().replace(/_/g, ' ');
@@ -130,7 +130,6 @@
       const clockBox = document.createElement('div');
       clockBox.className = 'clock-box';
 
-      // Wrapper for circular background behind canvas
       const dialWrapper = document.createElement('div');
       dialWrapper.className = 'clock-dial';
 
@@ -201,7 +200,6 @@
       const hourAngle = ((hour + minute / 60) * Math.PI / 6);
       const minuteAngle = ((minute + second / 60) * Math.PI / 30);
 
-      // Hour hand
       ctx.beginPath();
       ctx.moveTo(center.x, center.y);
       ctx.lineTo(center.x + Math.cos(hourAngle - Math.PI / 2) * 30,
@@ -209,7 +207,6 @@
       ctx.lineWidth = 2.5;
       ctx.stroke();
 
-      // Minute hand
       ctx.beginPath();
       ctx.moveTo(center.x, center.y);
       ctx.lineTo(center.x + Math.cos(minuteAngle - Math.PI / 2) * 50,
